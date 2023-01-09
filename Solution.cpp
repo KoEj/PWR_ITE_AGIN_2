@@ -13,5 +13,13 @@ void randomSolution(std::string filename, bool loaderPrint, bool distanceMatrixP
 	createDistanceMatrix(number_of_cities, distanceMatrixPrint);
 	std::vector<std::vector<int>> truckRoutesId = random(number_of_trucks, capacity, number_of_cities);
 	std::vector<double> truckDistances = calculateResultDstVect(0, truckRoutesId);
-	calculateResult(truckDistances);
+	calculateResult("Random", truckDistances);
+}
+
+void greedySolution(std::string filename, bool loaderPrint, bool distanceMatrixPrint) {
+	Loader(filename, loaderPrint);
+	createDistanceMatrix(number_of_cities, distanceMatrixPrint);
+	std::vector<std::vector<int>> truckRoutesId = greedy(number_of_trucks, capacity, number_of_cities);
+	std::vector<double> truckDistances = calculateResultDstVect(0, truckRoutesId);
+	calculateResult("Greedy", truckDistances);
 }

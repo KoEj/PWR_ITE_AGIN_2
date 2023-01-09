@@ -124,8 +124,8 @@ void Loader(std::string filename, bool loaderPrint) {
 
 void createDistanceMatrix(int N, bool printMatrix) {
     // start from index number 1
-    for (int i = 0; i <= N; i++) {
-        for (int j = 0; j <= N; j++) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
             double distance = 0;
             if (i != j) {
                 distance = std::sqrt(std::pow(X[i] - X[j], 2) + std::pow(Y[i] - Y[j], 2));
@@ -135,8 +135,8 @@ void createDistanceMatrix(int N, bool printMatrix) {
     }
 
     if (printMatrix) {
-        for (int i = 0; i <= N; i++) {
-            for (int j = 0; j <= N; j++) {
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
                 std::cout << dimensions[i][j] << "\t";
             }
             std::cout << std::endl;
@@ -152,7 +152,6 @@ std::vector<std::vector<int>> random(int trucksNumber, int magasinCapacity, int 
     std::vector<int> cValues;
     int i = 0;
     int valuesAdded = 0;
-    int randomVal;
     bool alreadyIn = false;
 
     for (int j = 0; j < citiesNumber; j++) {
@@ -218,6 +217,117 @@ std::vector<std::vector<int>> random(int trucksNumber, int magasinCapacity, int 
     return truckRoutesId;
 }
 
+std::vector<std::vector<int>> greedy(int trucksNumber, int magasinCapacity, int citiesNumber) {
+    std::vector<std::vector<double>> dimensionsCopy;
+    std::vector<std::vector<int>> trucks;
+    std::vector<std::vector<int>> truckRoutesId;
+    std::vector<int> cValues;
+    std::vector<int> path;
+    std::vector<int> helperVector;
+    std::vector<double> tempVector;
+    int n = 0;
+    int valuesAdded = 0;
+    int currentCity = 0;
+    int id = currentCity;
+    double distance = DBL_MAX;
+
+    for (int j = 0; j < citiesNumber; j++) {
+        cValues.push_back(C[j]);
+    }
+
+    for (int i = 0; i < citiesNumber; i++) {
+        for (int j = 0; j < citiesNumber; j++) {
+            tempVector.push_back(dimensions[i][j]);
+        }
+        dimensionsCopy.push_back(tempVector);
+        tempVector.clear();
+    }
+
+    //std::cout << "============================" << std::endl;
+    //for (auto a : dimensionsCopy) {
+    //    for (auto b : a) {
+    //        std::cout << b << "\t";
+    //    }
+    //    std::cout << std::endl;
+    //}
+    //std::cout << "============================" << std::endl;
+
+    for (int j = 0; j < trucksNumber; j++) {
+        trucks.push_back((std::vector<int>)0);
+    }
+
+    while (n < trucksNumber) {
+        for (int i = 0; i < citiesNumber; i++) {
+            for (int j = 0; j < citiesNumber; j++) {
+                if (dimensionsCopy[currentCity][j] != 0 && dimensionsCopy[currentCity][j] < distance) {
+                    if (std::find(path.begin(), path.end(), j) == path.end()) {
+                        distance = dimensionsCopy[currentCity][j];
+                        id = j;
+                    }
+
+                }
+            }
+
+            int truckVectorSum = std::accumulate(trucks.at(n).begin(), trucks.at(n).end(), 0);
+            if (id != 0 && ((cValues.at(id) + truckVectorSum) <= magasinCapacity)) {
+                if ((cValues.at(id) != 0)) {
+                    trucks.at(n).push_back(cValues.at(id));
+                    path.push_back(id);
+                    helperVector.push_back(id);
+                    //std::cout << "Distance: " << distance << "  ";
+                    //std::cout << "cValue: " << cValues.at(id) << "  ";
+                    //std::cout << "id: " << id << std::endl;
+                }
+            }
+
+            currentCity = id;
+            id = 0;
+            distance = DBL_MAX;
+
+            for (auto a : path) {
+                for (int i = 0; i < citiesNumber; i++) {
+                    dimensionsCopy[a][i] = 0;
+                    dimensionsCopy[i][a] = 0;
+                }
+            }
+        } 
+
+        truckRoutesId.push_back(helperVector);
+
+        //std::cout << "==============" << n <<"==============" << std::endl;
+        //for (auto a : dimensionsCopy) {
+        //    for (auto b : a) {
+        //        std::cout << b << "\t";
+        //    }
+        //    std::cout << std::endl;
+        //}
+        //std::cout << "============================" << std::endl;
+
+        currentCity = 0;
+        helperVector.clear();
+        n++;
+    }
+
+    //std::cout << std::endl;std::cout << std::endl;
+    //for (auto a : truckRoutesId) {
+    //    for (auto b : a) {
+    //        std::cout << b << "\t";
+    //    }
+    //    std::cout << std::endl;
+    //}
+
+    //std::cout << std::endl;std::cout << std::endl;
+    //for (auto a : trucks) {
+    //    for (auto b : a) {
+    //        std::cout << b << "\t";
+    //    }
+    //    std::cout << std::endl;
+    //}
+        
+
+    return truckRoutesId;
+}
+
 std::vector<double> calculateResultDstVect(int startCity, std::vector<std::vector<int>> vector) {
     double distance = 0;
     double result = 0;
@@ -248,7 +358,12 @@ std::vector<double> calculateResultDstVect(int startCity, std::vector<std::vecto
 }
 
 double calculateResult(std::vector<double> vectorResult) {
+    return calculateResult("", vectorResult);
+}
+
+double calculateResult(std::string name, std::vector<double> vectorResult) {
     double vectorSum = std::accumulate(vectorResult.begin(), vectorResult.end(), 0.0);
-    std::cout << std::endl << "VectorSum: " << vectorSum << std::endl;
+    std::string stringName = name.empty() ? "" : name;
+    std::cout << std::endl << "VectorSum " << stringName  << ": " << vectorSum << std::endl;
     return vectorSum;
 }
