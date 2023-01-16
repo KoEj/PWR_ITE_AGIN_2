@@ -181,11 +181,11 @@ std::vector<std::vector<int>> random(int trucksNumber, int magasinCapacity, int 
             for (int j = 0; j < citiesNumber; j++) {
                 int truckVectorSum = std::accumulate(trucks.at(i).begin(), trucks.at(i).end(), 0);
 
-                if ((cValues.at(j) + truckVectorSum) <= magasinCapacity) {
-                    if ((cValues.at(j) != 0)) {
-                        trucks.at(i).push_back(cValues.at(j));
+                if ((cValues.at(idVector.at(j)) + truckVectorSum) <= magasinCapacity) {
+                    if ((cValues.at(idVector.at(j)) != 0)) {
+                        trucks.at(i).push_back(cValues.at(idVector.at(j)));
                         helperVector.push_back(j);
-                        cValues.at(j) = 0;
+                        cValues.at(idVector.at(j)) = 0;
                         valuesAdded++;
                     }
                 }
