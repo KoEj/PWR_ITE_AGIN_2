@@ -27,7 +27,6 @@ void greedySolution(std::string filename, bool loaderPrint, bool distanceMatrixP
 void antSolution(std::string filename, bool loaderPrint, bool distanceMatrixPrint) {
 	Loader(filename, loaderPrint);
 	createDistanceMatrix(number_of_cities, distanceMatrixPrint);
-	std::vector<std::vector<int>> ants = antColonyOptimalization(number_of_trucks, capacity, number_of_cities);
-	//std::vector<double> truckDistances = calculateResultDstVect(0, ants);
-	//calculateResult("Ant", ants);
+	antColonyOptimalization(number_of_trucks, capacity, number_of_cities);
+	getAntResult();
 }

@@ -13,8 +13,8 @@ std::string filename = "file2.dat";  // path to change (depends on where the fil
 
 int main() {
     srand(time(NULL));
-    //randomSolution(filename, false, false);
-    //greedySolution(filename, false, false);
+    randomSolution(filename, false, false);
+    greedySolution(filename, false, false);
     antSolution(filename, false, false);
 
     return 0;
