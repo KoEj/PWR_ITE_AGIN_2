@@ -6,6 +6,7 @@ extern double C[1000];
 extern int number_of_trucks;
 extern int number_of_cities;
 extern int capacity;
+double pheromone[1000][1000];
 
 /// Function to split input information
 std::vector<std::string> split(std::string str, char delimiter) {
@@ -366,4 +367,141 @@ double calculateResult(std::string name, std::vector<double> vectorResult) {
     std::string stringName = name.empty() ? "" : name;
     std::cout << std::endl << "VectorSum " << stringName  << ": " << vectorSum << std::endl;
     return vectorSum;
+}
+
+std::vector<std::vector<int>> antColonyOptimalization(int trucksNumber, int magasinCapacity, int citiesNumber) {
+    int numberOfAnts = 20;
+    int iterations = 100;
+    double startingPheromoneValue = 0.1;
+    double evaporationPheromone = 0.1;
+    double Q = 100.0;
+    double alpha = 2.0;
+    double beta = 5.0;
+
+    for (int i = 0; i < citiesNumber; i++) {
+        for (int j = 0; j < citiesNumber; j++) {
+            pheromone[i][j] = startingPheromoneValue;
+        }
+    }
+
+    for (int it = 0; it < iterations; it++) {
+        std::vector<std::vector<int>> ants(numberOfAnts, std::vector<int>(citiesNumber));
+        std::vector<int> antLoadVec(numberOfAnts);
+        std::vector<double> antDistanceVec(numberOfAnts);
+
+        for (int i = 0; i < numberOfAnts; i++) {
+            ants.at(i).at(0) = rand() % citiesNumber;
+            antLoadVec.at(i) = C[ants.at(i).at(0)];
+        }
+
+
+        for (int i = 0; i < numberOfAnts; i++) {
+            for (int j = 1; j < citiesNumber; j++) {
+                std::vector<double> probabilities(citiesNumber);
+
+                for (int k = 0; k < citiesNumber; k++) {
+                    if (k != ants.at(i).at(j - 1)) {
+                        if (antLoadVec[i] + C[k] <= magasinCapacity) {
+                            probabilities[k] = calculateProbability(pheromone, dimensions, ants.at(i).at(j - 1), k, alpha, beta, citiesNumber);
+                        }
+                        else {
+                            probabilities[k] = 0;
+                        }
+                    }
+                }
+
+                // Normalize the probabilities
+                double sum_probabilities = 0.0;
+                for (int k = 0; k < citiesNumber; k++) {
+                    sum_probabilities += probabilities[k];
+                }
+                for (int k = 0; k < citiesNumber; k++) {
+                    probabilities[k] /= sum_probabilities;
+                }
+
+                // Choose the next node based on the probabilities
+                double random_number = (double)rand() / RAND_MAX;
+                double cumulative_probability = 0.0;
+                int nextCity = 0;
+                for (int k = 0; k < citiesNumber; k++) {
+                    cumulative_probability += probabilities[k];
+                    if (random_number <= cumulative_probability) {
+                        nextCity = k;
+                        break;
+                    }
+                }
+
+                // Move the ant to the next node
+                ants[i][j] = nextCity;
+                antLoadVec[i] += C[nextCity];
+                antDistanceVec[i] += dimensions[ants.at(i).at(j - 1)][nextCity];
+
+            }
+        }
+        if (it == (iterations - 1)) {
+            return ants;
+        } else {
+            updatePheromoneMatrix(pheromone, ants, antDistanceVec, numberOfAnts, alpha, beta, citiesNumber, evaporationPheromone);
+        }
+        // next iteration
+    }
+}
+
+double calculateProbability(double pheromone[][1000], double dimension[][1000], int i, int j, int alphaParam, int betaParam, int citiesNumber) {
+    double numerator = pow(pheromone[i][j], alphaParam) * pow(1.0 / dimension[i][j], betaParam);
+    double denominator = 0.0;
+    for (int k = 0; k < citiesNumber; k++) {
+        if (k != i) {
+            denominator += pow(pheromone[i][k], alphaParam) * pow(1.0 / dimension[i][k], betaParam);
+        }
+    }
+    return numerator / denominator;
+}
+
+void updatePheromoneMatrix(double pheromone[][1000], std::vector<std::vector<int>>& ants, std::vector<double>& antDistance, int numAnts, double alpha, double beta, int citiesNumber, double evaporate) {
+    for (int i = 0; i < numAnts; i++) {
+        double delta_pheromone = 1.0 / antDistance[i];
+        for (int j = 0; j < citiesNumber - 1; j++) {
+            pheromone[ants.at(i).at(j)][ants.at(i).at(j + 1)] += delta_pheromone;
+        }
+    }
+
+    for (int i = 0; i < citiesNumber; i++) {
+        for (int j = 0; j < citiesNumber; j++) {
+            pheromone[i][j] *= (1 - evaporate);
+        }
+    }
+}
+
+double calculateTotalDistance(double dimension[][1000], std::vector<int>& ant) {
+    double total_distance = 0.0;
+    for (int i = 0; i < ant.size() - 1; i++) {
+        total_distance += dimension[ant[i]][ant[i + 1]];
+    }
+    return total_distance;
+}
+
+std::vector<std::vector<int>> getResult(double dimension[][1000], std::vector<std::vector<int>>& ants, int startCity, int num_ants, int citiesNumber) {
+    int bestAnt = 0;
+    double bestDistance = std::numeric_limits<double>::max();
+    std::vector<std::vector<int>> resultVec(number_of_trucks);
+
+    // Find the best ant
+    for (int i = 0; i < num_ants; i++) {
+        std::cout << i << " ";
+        double currentDistance = calculateTotalDistance(dimension, ants[i]);
+        if (currentDistance < bestDistance) {
+            bestDistance = currentDistance;
+            bestAnt = i;
+        }
+    }
+
+    // Get the result vector
+    int currentCity = startCity;
+    for (int i = 0; i < citiesNumber; i++) {
+        resultVec[0].push_back(currentCity);
+        currentCity = ants[bestAnt][currentCity];
+    }
+
+    return resultVec;
 }

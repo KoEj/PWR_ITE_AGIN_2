@@ -18,9 +18,6 @@
     <ClCompile Include="Projekt_AIN.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TabuSearch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Prepare.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -29,9 +26,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="TabuSearch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Prepare.h">
       <Filter>Header Files</Filter>
     </ClInclude>

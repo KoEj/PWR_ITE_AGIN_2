@@ -5,3 +5,4 @@
 
 void randomSolution(std::string, bool, bool);
 void greedySolution(std::string, bool, bool);
+void antSolution(std::string, bool, bool);

@@ -9,11 +9,13 @@ int number_of_trucks;
 int number_of_cities;
 int capacity;
 
-std::string filename = "file.dat";  // path to change (depends on where the file/files are)
+std::string filename = "file2.dat";  // path to change (depends on where the file/files are)
 
 int main() {
     srand(time(NULL));
-    randomSolution(filename, false, false);
-    greedySolution(filename, false, false);
+    //randomSolution(filename, false, false);
+    //greedySolution(filename, false, false);
+    antSolution(filename, false, false);
+
     return 0;
 }

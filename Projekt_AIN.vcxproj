@@ -130,12 +130,10 @@
     <ClCompile Include="Prepare.cpp" />
     <ClCompile Include="Projekt_AIN.cpp" />
     <ClCompile Include="Solution.cpp" />
-    <ClCompile Include="TabuSearch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Prepare.h" />
     <ClInclude Include="Solution.h" />
-    <ClInclude Include="TabuSearch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
