@@ -8,13 +8,16 @@ extern int number_of_cities;
 extern int capacity;
 
 //ant 
-const int numberOfAnts = 20;
+const int numberOfAnts = 100;
 const int iterations = 100;
 const double startingPheromoneValue = 0.1;
-const double evaporationPheromone = 0.1;
-const double Q = 100.0;
-const double alpha = 2.0;
+const double evaporationPheromone = 0.2;
+const double Q = 50.0;
+const double alpha = 1.0;
 const double beta = 5.0;
+std::string csvFileName = "test.csv";
+bool toCSV = true;
+
 double pheromone[1000][1000];
 std::vector<std::vector<int>> ants(numberOfAnts, std::vector<int>(number_of_cities));
 std::vector<double> ant_distance(numberOfAnts);
@@ -382,10 +385,11 @@ double calculateResult(std::string name, std::vector<double> vectorResult) {
     return vectorSum;
 }
 
+//ant methods
 double calculateProbability(int current_node, int next_node) {
-    double pheromone_value = pheromone[current_node][next_node];
-    double distance_value = dimensions[current_node][next_node];
-    return pow(pheromone_value, alpha) * pow(1.0 / distance_value, beta);
+    double pheromoneValue = pheromone[current_node][next_node];
+    double distanceValue = dimensions[current_node][next_node];
+    return pow(pheromoneValue, alpha) * pow(1.0 / distanceValue, beta);
 }
 
 void updatePheromoneMatrix(int citiesNumber) {
@@ -443,6 +447,21 @@ void calculateResultDstVect(int startCity, std::vector<int> route) {
 }
 
 int antColonyOptimalization(int trucksNumber, int magasinCapacity, int citiesNumber) {
+    std::ofstream csvFile;
+    if (toCSV) {
+        // std::cout << "toCSV init" << std::endl;
+        csvFile.open(csvFileName, std::ios_base::app);
+        csvFile << "numberOfAnts" + std::to_string(numberOfAnts) + "\n";
+        csvFile << "\iterations: " + std::to_string(iterations);
+        csvFile << "\startingPheromoneValue: " + std::to_string(startingPheromoneValue);
+        csvFile << "\evaporationPheromone: " + std::to_string(evaporationPheromone);
+        csvFile << "\Q: " + std::to_string(Q);
+        csvFile << "\alpha: " + std::to_string(alpha);
+        csvFile << "\beta: " + std::to_string(beta);
+        csvFile << "\niteration,best,worst,avg\n";
+    }
+
+
     std::vector<std::vector<std::vector<int>>> trucks;
 
     for (int i = 0; i < citiesNumber; i++) {
@@ -451,7 +470,7 @@ int antColonyOptimalization(int trucksNumber, int magasinCapacity, int citiesNum
         }
     }
 
-    for (int it = 0; it < iterations; it++) {
+    for (int it = 1; it <= iterations; it++) {
         for (int i = 0; i < numberOfAnts; i++) {
             int currentCity = 0;
             ants.at(i).push_back(currentCity);
@@ -498,11 +517,38 @@ int antColonyOptimalization(int trucksNumber, int magasinCapacity, int citiesNum
 
                 ants.at(i).push_back(nextCity);
                 ant_load.at(i) += C[nextCity];
-                ant_distance.at(i) += dimensions[currentCity][nextCity];
+                ant_distance[i] += dimensions[currentCity][nextCity];
                 currentCity = nextCity;
             }
         }
         updatePheromoneMatrix(citiesNumber);
+
+        if (toCSV && it % 5 == 0) {
+            int bestIndex = 0;
+            int worstIndex = 0;
+            double maxValue = DBL_MIN;
+            double minValue = DBL_MAX;
+            double sum = 0;
+            
+            for (int i = 0; i < numberOfAnts; i++) {
+                sum += ant_distance[i];
+
+                if (ant_distance[i] < minValue) {
+                    minValue = ant_distance[i];
+                    bestIndex = i;
+                }
+                if (ant_distance[i] > maxValue) {
+                    maxValue = ant_distance[i];
+                    worstIndex = i;
+                }
+            }
+
+            //csvFile << "\ngeneration,best,worst,avg";
+            csvFile << std::to_string(it) + "," +
+                std::to_string(minValue) + "," +
+                std::to_string(maxValue) + "," +
+                std::to_string(sum / numberOfAnts) + "\n";
+        }
     }
 
     return 0;
