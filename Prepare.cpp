@@ -6,6 +6,11 @@ extern double C[1000];
 extern int number_of_trucks;
 extern int number_of_cities;
 extern int capacity;
+extern double best_distance;
+extern double worst_distance;
+extern double average_distance;
+double bestDistanceForIteration;
+double worstDistanceForIteration;
 
 //ant 
 const int numberOfAnts = 50;
@@ -410,23 +415,24 @@ void updatePheromoneMatrix(int citiesNumber) {
 
 void getAntResult() {
 	int best_ant = 0;
-	double best_distance = std::numeric_limits<double>::max();
-	double worst_distance = std::numeric_limits<double>::min();
-
+	double bestDst = std::numeric_limits<double>::max();
+	double worstDst = std::numeric_limits<double>::min();
 
 	for (int i = 0; i < numberOfAnts; i++) {
-		if (ant_distance[i] < best_distance) {
-			best_distance = ant_distance[i];
-			best_ant = i;
+		if (ant_distance[i] < bestDst) {
+			bestDst = ant_distance[i];
 		}
-		if (ant_distance[i] > worst_distance) {
-			worst_distance = ant_distance[i];
+		if (ant_distance[i] > worstDst) {
+			worstDst = ant_distance[i];
 		}
 	}
+
+	bestDistanceForIteration = bestDst;
+	worstDistanceForIteration = worstDst;
 	trucks.clear();
 	int start_city = 0;
-	calculateResultDstVect(start_city, ants[best_ant]);
-	std::cout << "Ant Colony Optimalization: " << best_distance << ", Worst distance: " << worst_distance << std::endl;
+	//calculateResultDstVect(start_city, ants[best_ant]);
+	//std::cout << "Ant Colony Optimalization: " << bestDistanceForIteration << ", Worst distance: " << worstDistanceForIteration << std::endl;
 }
 
 void calculateResultDstVect(int startCity, std::vector<int> route) {
@@ -533,12 +539,14 @@ int antColonyOptimalization(int trucksNumber, int magasinCapacity, int citiesNum
 		updatePheromoneMatrix(citiesNumber);
 		getAntResult();
 
-		//for (auto a : ant_distance) {
-		//	std::cout << a << " ";
-		//}
-		//std::cout << std::endl;
-
-
+		//best distance for iteration
+		if (bestDistanceForIteration < best_distance) {
+			best_distance = bestDistanceForIteration;
+		}
+		if (worstDistanceForIteration > worst_distance) {
+			worst_distance = worstDistanceForIteration;
+		}
+		average_distance += bestDistanceForIteration / iterations;
 
 		ants.assign(numberOfAnts, std::vector<int>(number_of_cities));
 		ant_distance.assign(numberOfAnts, 0);
@@ -572,6 +580,8 @@ int antColonyOptimalization(int trucksNumber, int magasinCapacity, int citiesNum
 				std::to_string(sum / numberOfAnts) + "\n";
 		}
 	}
+
+
 
 	return 0;
 }

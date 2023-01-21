@@ -8,6 +8,7 @@ double dimensions[1000][1000];            // as above
 int number_of_trucks;
 int number_of_cities;
 int capacity;
+int N = 10;
 
 std::string filename = "file2.dat";  // path to change (depends on where the file/files are)
 
