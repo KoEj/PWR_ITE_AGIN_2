@@ -14,14 +14,14 @@ double worstDistanceForIteration;
 
 //ant 
 const int numberOfAnts = 50;
-const int iterations = 10;
+const int iterations = 30;
 const double startingPheromoneValue = 0.1;
 const double evaporationPheromone = 0.2;
 const double Q = 50.0;
 const double alpha = 1.0;
 const double beta = 5.0;
-std::string csvFileName = "test.csv";
-bool toCSV = false;
+std::string csvFileName = "test_fixed2.csv";
+bool toCSV = true;
 
 double pheromone[1000][1000];
 std::vector<std::vector<int>> ants(numberOfAnts, std::vector<int>(number_of_cities));
@@ -394,15 +394,16 @@ double calculateResult(std::string name, std::vector<double> vectorResult) {
 double calculateProbability(int current_node, int next_node) {
 	double pheromoneValue = pheromone[current_node][next_node];
 	double distanceValue = dimensions[current_node][next_node];
-    return pow(pheromoneValue, alpha) * pow(1.0 / distanceValue, beta);
+	return pow(pheromoneValue, alpha) * pow(1.0 / distanceValue, beta);
 }
 
 void updatePheromoneMatrix(int citiesNumber) {
 	for (int i = 0; i < numberOfAnts; i++) {
-        double delta_pheromone = Q / ant_distance[i];
+		std::unique(ants.at(i).begin(), ants.at(i).end());
+		double delta_pheromone = Q / ant_distance[i];
 		for (int j = 0; j < citiesNumber - 1; j++) {
 			//std::cout << ants[i][j] << " " << ants[i][j + 1] << std::endl;
-            pheromone[ants[i][j]][ants[i][j + 1]] += delta_pheromone;
+			pheromone[ants[i][j]][ants[i][j + 1]] += delta_pheromone;
 		}
 	}
 
@@ -466,7 +467,7 @@ int antColonyOptimalization(int trucksNumber, int magasinCapacity, int citiesNum
 		csvFile << "\iterations: " + std::to_string(iterations);
 		csvFile << "\startingPheromoneValue: " + std::to_string(startingPheromoneValue);
 		csvFile << "\evaporationPheromone: " + std::to_string(evaporationPheromone);
-        csvFile << "\Q: " + std::to_string(Q);
+		csvFile << "\Q: " + std::to_string(Q);
 		csvFile << "\alpha: " + std::to_string(alpha);
 		csvFile << "\beta: " + std::to_string(beta);
 		csvFile << "\niteration,best,worst,avg\n";
@@ -483,73 +484,73 @@ int antColonyOptimalization(int trucksNumber, int magasinCapacity, int citiesNum
 
 	for (int it = 1; it <= iterations; it++) {
 		for (int i = 0; i < numberOfAnts; i++) {
+			std::vector<int> visitedCities;
 			int currentCity = 0;
 			ants.at(i).push_back(currentCity);
 			ant_load.at(i) = C[currentCity];
+			while (visitedCities.size() <= 16)
+				for (int j = 1; j < citiesNumber; j++) {
+					std::vector<double> probabilities;
+					double probability_sum = 0.0;
 
-			for (int j = 1; j < citiesNumber; j++) {
-				std::vector<double> probabilities;
-				double probability_sum = 0.0;
+					for (int k = 0; k < citiesNumber; k++) {
+						if (std::find(ants.at(i).begin(), ants.at(i).end(), k) != ants.at(i).end()) {
+							probabilities.push_back(0.0);
+							continue;
+						}
 
-				for (int k = 0; k < citiesNumber; k++) {
-					if (std::find(ants.at(i).begin(), ants.at(i).end(), k) != ants.at(i).end()) {
-						probabilities.push_back(0.0);
-						continue;
+						if (ant_load.at(i) + C[k] > magasinCapacity) {
+							probabilities.push_back(0.0);
+							continue;
+						}
+
+						double probability = calculateProbability(currentCity, k);
+						probability_sum += probability;
+						probabilities.push_back(probability);
 					}
 
-					if (ant_load.at(i) + C[k] > magasinCapacity) {
-						probabilities.push_back(0.0);
-						continue;
+					std::vector<double> cumulative_probabilities;
+					double cumulative_probability_sum = 0.0;
+
+					for (int k = 0; k < citiesNumber; k++) {
+						probabilities[k] /= probability_sum;
+						cumulative_probability_sum += probabilities[k];
+						cumulative_probabilities.push_back(cumulative_probability_sum);
 					}
 
-					double probability = calculateProbability(currentCity, k);
-					probability_sum += probability;
-					probabilities.push_back(probability);
-				}
+					double random_value = double(std::rand()) / RAND_MAX;
 
-				std::vector<double> cumulative_probabilities;
-				double cumulative_probability_sum = 0.0;
-
-				for (int k = 0; k < citiesNumber; k++) {
-					probabilities[k] /= probability_sum;
-					cumulative_probability_sum += probabilities[k];
-					cumulative_probabilities.push_back(cumulative_probability_sum);
-				}
-
-				double random_value = double(std::rand()) / RAND_MAX;
-
-				int nextCity = 0;
-				for (int k = 0; k < citiesNumber; k++) {
-					if (random_value <= cumulative_probabilities[k]) {
-						nextCity = k;
-						break;
+					int nextCity = 0;
+					for (int k = 0; k < citiesNumber; k++) {
+						if (random_value <= cumulative_probabilities[k]) {
+							nextCity = k;
+							//if (currentCity == nextCity)
+							//	continue;
+							break;
+						}
 					}
-				}
 
-				ants.at(i).push_back(nextCity);
-				ant_load.at(i) += C[nextCity];
-				ant_distance[i] += dimensions[currentCity][nextCity];
+					ants.at(i).push_back(nextCity);
+					ant_load.at(i) += C[nextCity];
+					ant_distance[i] += dimensions[currentCity][nextCity];
 
-				if (nextCity == 0) {
-					ant_load.at(i) = 0;
+					if (nextCity == 0) {
+						ant_load.at(i) = 0;
+					}
+					visitedCities.push_back(currentCity);
+					currentCity = nextCity;
+					std::unique(visitedCities.begin(), visitedCities.end());
 				}
-				currentCity = nextCity;
-			}
 		}
 		updatePheromoneMatrix(citiesNumber);
 		getAntResult();
 
-		//best distance for iteration
-		if (bestDistanceForIteration < best_distance) {
-			best_distance = bestDistanceForIteration;
-		}
-		if (worstDistanceForIteration > worst_distance) {
-			worst_distance = worstDistanceForIteration;
-		}
+		best_distance = std::min(best_distance, bestDistanceForIteration);
+		worst_distance = std::max(worst_distance, worstDistanceForIteration);
+
 		average_distance += bestDistanceForIteration / iterations;
 
 		ants.assign(numberOfAnts, std::vector<int>(number_of_cities));
-		ant_distance.assign(numberOfAnts, 0);
 		ant_load.assign(numberOfAnts, 0);
 
 
@@ -579,6 +580,8 @@ int antColonyOptimalization(int trucksNumber, int magasinCapacity, int citiesNum
 				std::to_string(maxValue) + "," +
 				std::to_string(sum / numberOfAnts) + "\n";
 		}
+
+		ant_distance.assign(numberOfAnts, 0);
 	}
 
 
