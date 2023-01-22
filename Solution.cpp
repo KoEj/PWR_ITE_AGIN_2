@@ -53,3 +53,12 @@ void antSolution(std::string filename, bool loaderPrint, bool distanceMatrixPrin
 	std::cout << "Ant Colony Optimalization worst avg: " << sumWorstDistance / N << std::endl;
 	std::cout << "Ant Colony Optimalization average avg : " << sumAverageDistance / N << std::endl;
 }
+
+void saSolution(std::string filename, bool loaderPrint, bool distanceMatrixPrint) {
+	Loader(filename, loaderPrint);
+	createDistanceMatrix(number_of_cities, distanceMatrixPrint);
+
+	//for (int i = 0; i < 10;  i++) {
+		simulated_annealing(false);
+	//}
+}
