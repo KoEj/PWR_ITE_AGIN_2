@@ -137,7 +137,7 @@ void Loader(std::string filename, bool loaderPrint) {
 
 		// Validate 
 		std::cout << "No" << ' ' << "X" << ' ' << " Y" << ' ' << "C" << std::endl;
-		for (int i = 0; i < 16; i++)
+		for (int i = 0; i < number_of_cities; i++)
 		{
 			std::cout << i << ' ' << X[i] << ' ' << Y[i] << ' ' << C[i] << std::endl;
 		}
@@ -200,13 +200,13 @@ std::vector<std::vector<int>> random(int trucksNumber, int magasinCapacity, int 
 		std::random_shuffle(idVector.begin(), idVector.end());
 
 		while (i < trucksNumber) {
-			for (int j = 0; j < citiesNumber; j++) {
+			for (int j = 1; j < citiesNumber; j++) {
 				int truckVectorSum = std::accumulate(trucks.at(i).begin(), trucks.at(i).end(), 0);
 
 				if ((cValues.at(idVector.at(j)) + truckVectorSum) <= magasinCapacity) {
 					if ((cValues.at(idVector.at(j)) != 0)) {
 						trucks.at(i).push_back(cValues.at(idVector.at(j)));
-						helperVector.push_back(j);
+						helperVector.push_back(idVector.at(j));
 						cValues.at(idVector.at(j)) = 0;
 						valuesAdded++;
 					}
@@ -581,7 +581,160 @@ int antColonyOptimalization(int trucksNumber, int magasinCapacity, int citiesNum
 		}
 	}
 
-
-
 	return 0;
+}
+
+
+/*---------------------------*/
+/*    Simulated Annealing    */
+/*---------------------------*/
+
+const int       max_iterations = 25;
+const int       neighborhood = 10;
+double          temp = 400;
+const double    t0 = 0.1;
+const double    sa_alpha = 0.9987;
+
+std::vector<std::vector<int>> current_solution;
+
+
+double cost(std::vector<std::vector<int>> routes) {
+	double all_cost = 0;
+	std::vector<double> truckDistances = calculateResultDstVect(0, routes);
+
+	for (int i = 0; i < number_of_trucks; i++)
+	{
+		all_cost += truckDistances[i];
+	}
+
+	return all_cost;
+}
+
+std::vector<std::vector<int>> initializeRandomSolution(int number_of_trucks, int capacity, int number_of_cities) {
+	std::vector<std::vector<int>> truckRoutesId = random(number_of_trucks, capacity, number_of_cities);
+
+	return truckRoutesId;
+}
+
+std::vector < std::vector<int>> generateNeighbor(std::vector<std::vector<int>> routes){
+	std::vector<std::vector<int>> new_routes = routes;
+
+	int random_truck = rand() % number_of_trucks;
+	int random_ind1 = rand() % new_routes[random_truck].size();
+	int random_ind2 = rand() % new_routes[random_truck].size();
+
+	int temp = new_routes[random_truck][random_ind1];
+	new_routes[random_truck][random_ind1] = new_routes[random_truck][random_ind2];
+	new_routes[random_truck][random_ind2] = temp;
+
+	return new_routes;
+}
+
+bool is_valid_route(std::vector<std::vector<int>> routes) {
+	std::vector<bool> visited(number_of_cities, false);
+
+	// Checking all cities are visited
+	for (int i = 0; i < number_of_trucks; i++) {
+		for (int j = 0; j < routes[i].size(); j++) {
+			int current = routes[i][j];
+			if (current != 0) {
+				visited[current - 1] = true;
+			}
+		}
+	}
+
+	for (int i = 0; i < number_of_cities-1; i++) {
+		if (!visited[i]) {
+			return false;
+		}
+	}
+
+	// Checking capacity on all trucks
+	double total_demand = 0;
+	for (int i = 0; i < number_of_trucks; i++) {
+		for (int j = 0; j < routes[i].size(); j++) {
+			int current = routes[i][j];
+			if (current != 0) {
+				total_demand += C[current];
+			}
+		}
+		if (total_demand > capacity) {
+			return false;
+		}
+		total_demand = 0;
+	}
+
+	return true;
+}
+
+std::vector<std::vector<int>> generateNeighbors(std::vector<std::vector<int>> routes) {
+	std::vector<std::vector<int>> best_neighbor = routes;
+
+	double best_dist = cost(routes);
+
+	for (int i = 0; i < neighborhood; i++)
+	{
+		std::vector<std::vector<int>> new_routes = generateNeighbor(routes);
+		double new_distance = cost(new_routes);
+
+		if (is_valid_route(new_routes))
+		{
+			best_neighbor = new_routes;
+			best_dist = new_distance;
+		}
+	}
+
+	return best_neighbor;
+}
+
+
+void simulated_annealing() {
+
+	std::vector<std::vector<int>> best_solution;
+	std::vector<std::vector<int>> neigh_best;
+	double current_cost, best_cost, best_best;
+	double neigh_best_cost;
+	bool v = true;
+
+	current_solution = initializeRandomSolution(number_of_trucks, capacity, number_of_cities);
+	best_solution = current_solution;
+	best_cost = 9999999.99;
+	best_best = current_cost = cost(current_solution);
+
+	srand(time(NULL));
+
+	while (temp > t0)
+	{
+		for (int i = 0; i < max_iterations; i++) {
+			neigh_best = generateNeighbors(current_solution);
+			neigh_best_cost = cost(neigh_best);
+
+			if (neigh_best_cost < current_cost) {
+				current_cost = neigh_best_cost;
+				current_solution = neigh_best;
+
+				if (neigh_best_cost < best_cost) {
+					best_cost = neigh_best_cost;
+					best_solution = neigh_best;
+				}
+			}
+			else {
+				float accept_prop = exp((current_cost - neigh_best_cost) / temp);
+				float random_prop = (float)rand() / RAND_MAX;
+
+				if (random_prop < accept_prop) {
+					current_solution = neigh_best;
+					current_cost = neigh_best_cost;
+				}
+			}
+
+		}
+		if (best_best > best_cost) {
+			best_best = best_cost;
+		}
+		std::cout << current_cost << ';' << best_best << std::endl;
+		temp *= sa_alpha;
+	}
+
+	std::cout << "\nBest cost: " << best_best << std::endl;
 }

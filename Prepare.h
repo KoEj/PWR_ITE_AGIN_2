@@ -20,3 +20,10 @@ void updatePheromoneMatrix(int citiesNumber);
 double calculateProbability(int current_node, int next_node);
 void calculateResultDstVect(int, std::vector<int>);
 void getAntResult();
+
+double cost(std::vector<std::vector<int>>);
+std::vector<std::vector<int>> initializeRandomSolution(int, int, int);
+bool is_valid_route(std::vector<std::vector<int>>);
+std::vector < std::vector<int>> generateNeighbor(std::vector<std::vector<int>>);
+std::vector<std::vector<int>> generateNeighbors(std::vector<std::vector<int>>);
+void simulated_annealing();

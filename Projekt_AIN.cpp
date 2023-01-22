@@ -16,7 +16,8 @@ int main() {
     srand(time(NULL));
     randomSolution(filename, false, false);
     greedySolution(filename, false, false);
-    antSolution(filename, false, false);
+    //antSolution(filename, false, false);  
+    saSolution(filename, false, false);
 
     return 0;
 }
