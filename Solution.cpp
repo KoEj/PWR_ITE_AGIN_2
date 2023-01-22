@@ -57,5 +57,8 @@ void antSolution(std::string filename, bool loaderPrint, bool distanceMatrixPrin
 void saSolution(std::string filename, bool loaderPrint, bool distanceMatrixPrint) {
 	Loader(filename, loaderPrint);
 	createDistanceMatrix(number_of_cities, distanceMatrixPrint);
-	simulated_annealing();
+
+	//for (int i = 0; i < 10;  i++) {
+		simulated_annealing(false);
+	//}
 }

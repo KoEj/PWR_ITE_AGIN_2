@@ -688,23 +688,42 @@ std::vector<std::vector<int>> generateNeighbors(std::vector<std::vector<int>> ro
 }
 
 
-void simulated_annealing() {
+void simulated_annealing(bool toCSV) {
+	double iterator = 0, sum = 0;
+	double average_best = 0;
+
+	if (toCSV) {
+		std::string csvFileName = "sa2.csv";
+		std::ofstream csvFile1;
+
+		// std::cout << "toCSV init" << std::endl;
+		csvFile1.open(csvFileName, std::ios_base::app);
+		csvFile1 << ";;;Max_iterations" + std::to_string(max_iterations);
+		csvFile1 << "\n;;;Neighborhood: " + std::to_string(neighborhood);
+		csvFile1 << "\n;;;Start temperature: " + std::to_string(startingPheromoneValue);
+		csvFile1 << "\n;;;Temperature 0: " + std::to_string(t0);
+		csvFile1 << "\n;;;Alpha : " + std::to_string(sa_alpha);
+		csvFile1 << "\n\ncurrent;best\n";
+	}
 
 	std::vector<std::vector<int>> best_solution;
 	std::vector<std::vector<int>> neigh_best;
-	double current_cost, best_cost, best_best;
+
+	double current_cost, best_cost, best_best, worst_best;
 	double neigh_best_cost;
 	bool v = true;
 
 	current_solution = initializeRandomSolution(number_of_trucks, capacity, number_of_cities);
 	best_solution = current_solution;
-	best_cost = 9999999.99;
+	worst_best = 0;
+	best_cost = 9999999.9;
 	best_best = current_cost = cost(current_solution);
 
 	srand(time(NULL));
 
 	while (temp > t0)
 	{
+		iterator += 1;
 		for (int i = 0; i < max_iterations; i++) {
 			neigh_best = generateNeighbors(current_solution);
 			neigh_best_cost = cost(neigh_best);
@@ -729,12 +748,18 @@ void simulated_annealing() {
 			}
 
 		}
-		if (best_best > best_cost) {
-			best_best = best_cost;
-		}
-		std::cout << current_cost << ';' << best_best << std::endl;
+		sum += best_cost;
+
+		best_best = std::min(best_cost, best_best);
+		worst_best = std::max(worst_best, best_cost);
+		average_best = sum / iterator;
+
 		temp *= sa_alpha;
+		//csvFile1 << std::to_string(current_cost) + ";" + std::to_string(best_best) + "\n";
+		// std::cout << current_cost << '\n';
 	}
 
-	std::cout << "\nBest cost: " << best_best << std::endl;
+	
+	std::cout << "\nBest cost, worst, average " << best_best << " " << worst_best << " " << average_best;
+	temp = 400;
 }
